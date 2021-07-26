@@ -4,8 +4,13 @@
 	branch = mystikos.v2
 [submodule "third_party/musl/musl"]
 	path = third_party/musl/musl
-	url = git://git.musl-libc.org/musl
+	url = https://github.com/openenclave/openenclave-musl.git
+	branch = openenclave-musl-1.2.2
 [submodule "third_party/ltp/ltp"]
 	path = third_party/ltp/ltp
-	url = https://@github.com/lsds/ltp.git
+	url = https://github.com/lsds/ltp.git
 	branch = sgx-lkl
+[submodule "third_party/mbedtls/mbedtls"]
+	path = third_party/mbedtls/mbedtls
+	url = https://github.com/ARMmbed/mbedtls
+	branch = mbedtls-2.16

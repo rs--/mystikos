@@ -8,11 +8,7 @@ PKGNAME=mystikos-$(VERSION)-x86_64
 TARBALL=$(PKGNAME).tar.gz
 
 all:
-	$(MAKE) .git/hooks/pre-commit
 	$(MAKE) dirs
-
-.git/hooks/pre-commit:
-	cp scripts/pre-commit .git/hooks/pre-commit
 
 ##==============================================================================
 ##
@@ -21,8 +17,6 @@ all:
 ##==============================================================================
 
 # CAUTION: this must be run before all other targets
-DIRS += prereqs
-
 DIRS += third_party
 
 ifndef MYST_PRODUCT_BUILD

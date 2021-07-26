@@ -26,7 +26,7 @@ endif
 build:
 	$(MAKE) musl
 	$(MAKE) musl/config.mak
-	( cd musl; make install )
+	( pwd; ls -l; cd musl; make install )
 	$(MAKE) cache
 
 fetch_cache:
@@ -42,7 +42,6 @@ ifdef MYST_USE_BUILD_CACHE
 endif
 
 clean:
-	rm -rf musl
 
 distclean: clean
 
@@ -50,6 +49,5 @@ musl/config.mak:
 	( cd musl; ./configure --prefix=$(PREFIX) )
 
 musl:
-	git clone $(URL) -b $(BRANCH)
 
 tests:

@@ -47,7 +47,6 @@ distclean:
 	rm -rf mbedtls
 
 mbedtls:
-	git clone $(URL) -b $(BRANCH)
 
 hash:
 	echo $(HASH)

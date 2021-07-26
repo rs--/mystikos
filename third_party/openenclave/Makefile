@@ -48,13 +48,6 @@ $(TOP)/build/bin/myst-gdb:
 FETCH_SUBMODULE = git submodule update --init --progress
 
 openenclave:
-	git clone $(URL) -b $(BRANCH)
-	( cd openenclave; $(FETCH_SUBMODULE) tools/oeedger8r-cpp )
-	( cd openenclave; $(FETCH_SUBMODULE) 3rdparty/musl/musl )
-	( cd openenclave; $(FETCH_SUBMODULE) 3rdparty/mbedtls/mbedtls )
-	( cd openenclave; $(FETCH_SUBMODULE) 3rdparty/openssl/openssl )
-	( cd openenclave; $(FETCH_SUBMODULE) 3rdparty/openssl/intel-sgx-ssl )
-	( cd openenclave; $(FETCH_SUBMODULE) 3rdparty/snmalloc )
 
 configure_oe: $(OPENENCLAVE_BUILD)/Makefile
 
