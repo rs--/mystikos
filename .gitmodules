@@ -1,11 +1,15 @@
 [submodule "third_party/openenclave/openenclave"]
 	path = third_party/openenclave/openenclave
 	url = https://github.com/openenclave/openenclave.git
-	branch = mystikos.v2
+	branch = mystikos.v5
 [submodule "third_party/musl/musl"]
 	path = third_party/musl/musl
-	url = https://github.com/openenclave/openenclave-musl.git
-	branch = openenclave-musl-1.2.2
+	url = https://github.com/rs--/openenclave-musl.git
+	branch = mystikos-1.2.0
+[submodule "third_party/gcompat/gcompat"]
+	path = third_party/gcompat/gcompat
+	url = https://github.com/rs--/gcompat.git
+	branch = mystikos-1.0.0
 [submodule "third_party/ltp/ltp"]
 	path = third_party/ltp/ltp
 	url = https://github.com/lsds/ltp.git
