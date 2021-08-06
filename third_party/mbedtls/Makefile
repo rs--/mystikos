@@ -43,9 +43,6 @@ endif
 clean:
 	( /usr/bin/test ! -d mbedtls || $(MAKE) -C mbedtls clean )
 
-distclean:
-	rm -rf mbedtls
-
 mbedtls:
 
 hash:

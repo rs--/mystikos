@@ -1,9 +1,72 @@
-TOP = $(abspath $(CURDIR)/../..)
+TOP=$(abspath ../..)
 include $(TOP)/defs.mak
+include $(TOP)/config.mak
 
-DIRS = pristine crt
+URL=git://git.musl-libc.org/musl
 
-include $(TOP)/rules.mak
+BRANCH=v1.2.0
+
+# get the hash of the remote github repository (for the given branch)
+HASH1=$(shell git ls-remote $(URL) -b $(BRANCH) | cut -f1 )
+
+# get the hash of the patch.diff file
+HASH2=$(shell sha256sum patch.diff | cut -d' ' -f 1)
+
+# get the composite hash (github repository and patch.diff file)
+HASH=$(shell echo "$(HASH1)$(HASH2)" | sha256sum - | cut -d' ' -f 1)
+
+CACHE_DIR=$(HOME)/.mystikos/cache/musl/crt
+
+ifdef MYST_USE_BUILD_CACHE
+CACHE_CHECK=$(wildcard $(CACHE_DIR)/$(HASH))
+endif
+
+WHICH_GCC = $(shell which gcc)
+
+CFLAGS = -g -Werror -fPIC
+
+ifeq ($(MYST_RELEASE),1)
+CFLAGS += -O3
+endif
+
+THISDIR=$(CURDIR)
+
+all:
+ifeq ($(CACHE_CHECK),)
+	$(MAKE) build
+else
+	$(MAKE) fetch_cache
+endif
+
+fetch_cache:
+	rm -rf musl
+	cp -r $(CACHE_DIR)/$(HASH) musl
+
+build:
+	$(MAKE) musl
+	$(MAKE) musl/config.mak
+	( cd musl; $(MAKE) CC="$(WHICH_GCC) $(CFLAGS)" )
+	$(MAKE) cache
+
+cache:
+ifdef MYST_USE_BUILD_CACHE
+	rm -rf $(CACHE_DIR)/$(HASH)
+	mkdir -p $(CACHE_DIR)
+	cp -r musl $(CACHE_DIR)/$(HASH)
+endif
+
+clean:
+ifneq ($(wildcard musl),)
+	( cd musl && make clean )
+	rm -f musl/config.mak
+endif
 
 distclean:
-	@ $(foreach i, $(DIRS), $(MAKE) -C $(i) distclean $(NL) )
+ifneq ($(wildcard musl),)
+	rm -rf musl
+endif
+
+musl/config.mak:
+	( cd musl; ./configure --enable-debug=yes --disable-optimize )
+
+musl:
