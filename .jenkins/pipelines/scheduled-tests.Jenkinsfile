@@ -24,6 +24,8 @@ pipeline {
         )
         MYST_NIGHTLY_TEST = 1
         MYST_ENABLE_GCOV = 1
+        TEST_LOG=".test-output.log"
+        FAILED_TEST_THRESHOLD=5
     }
     stages {
         stage("Cleanup files") {
@@ -71,6 +73,13 @@ pipeline {
             steps {
                 sh """
                    ${JENKINS_SCRIPTS}/global/make-tests.sh
+                   """
+            }
+        }
+        stage('Evaluate failed tests') {
+            steps {
+                sh """
+                   ${JENKINS_SCRIPTS}/global/evaluate-failures.sh
                    """
             }
         }
