@@ -24,7 +24,7 @@ pipeline {
         )
         MYST_NIGHTLY_TEST = 1
         MYST_ENABLE_GCOV = 1
-        TEST_LOG=".test-output.log"
+        TEST_LOGs=".test_logs"
         FAILED_TEST_THRESHOLD=5
     }
     stages {
@@ -48,6 +48,9 @@ pipeline {
                    # Install global dependencies
                    ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
                    ${JENKINS_SCRIPTS}/global/init-install.sh
+
+                   # Make directory for logs
+                   mkdir -p ${TEST_LOGS}
                    """
             }
         }
@@ -71,16 +74,11 @@ pipeline {
         }
         stage('Run all tests') {
             steps {
-                sh """
-                   ${JENKINS_SCRIPTS}/global/make-tests.sh
-                   """
-            }
-        }
-        stage('Evaluate failed tests') {
-            steps {
-                sh """
-                   ${JENKINS_SCRIPTS}/global/evaluate-failures.sh
-                   """
+                catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
+                    sh """
+                       ${JENKINS_SCRIPTS}/global/make-tests.sh | tee ${TEST_LOGS}/MAKE_TESTS
+                       """
+                }
             }
         }
         stage('Setup Solutions Access') {
@@ -91,29 +89,31 @@ pipeline {
                                  string(credentialsId: 'ACC-Prod-Subscription-ID', variable: 'AZURE_SUBSCRIPTION_ID'),
                                  string(credentialsId: 'oe-jenkins-dev-rg', variable: 'JENKINS_RESOURCE_GROUP'),
                                  string(credentialsId: 'mystikos-managed-identity', variable: "MYSTIKOS_MANAGED_ID")]) {
-                    sh '''
+                    sh """
                        ${JENKINS_SCRIPTS}/solutions/init-config.sh
                        ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
                        ${JENKINS_SCRIPTS}/solutions/azure-config.sh
-                       '''
+                       """
                 }
             }
         }
         stage('Run SQL Solution - USEAST') {
             steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
                     withCredentials([string(credentialsId: 'mystikos-sql-db-name-useast', variable: 'DB_NAME'),
                                      string(credentialsId: 'mystikos-sql-db-server-name-useast', variable: 'DB_SERVER_NAME'),
                                      string(credentialsId: 'mystikos-maa-url-useast', variable: 'MAA_URL'),
                                      string(credentialsId: 'mystikos-managed-identity-objectid', variable: 'DB_USERID')]) {
-                        sh "make tests -C ${WORKSPACE}/solutions"
+                        sh """
+                           make tests -C ${WORKSPACE}/solutions | tee ${TEST_LOGS}/SQL_TESTS
+                           """
                     }
                 }
             }
         }
         stage('Run Azure SDK tests') {
             steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
                     withCredentials([string(credentialsId: 'Jenkins-ServicePrincipal-ID', variable: 'servicePrincipalId'),
                                      string(credentialsId: 'ACC-Prod-Tenant-ID', variable: 'tenantId'),
                                      string(credentialsId: 'Jenkins-ServicePrincipal-Password', variable: 'servicePrincipalKey'),
@@ -124,7 +124,8 @@ pipeline {
                         sh """
                            ${JENKINS_SCRIPTS}/global/run-azure-tests.sh \
                              ${WORKSPACE}/tests/azure-sdk-for-cpp  \
-                             ${WORKSPACE}/solutions/dotnet_azure_sdk
+                             ${WORKSPACE}/solutions/dotnet_azure_sdk \
+                             | tee ${TEST_LOGS}/SDK_TESTS
                            """
                     }
                 }
@@ -132,9 +133,9 @@ pipeline {
         }
         stage('Run DotNet 5 Test Suite') {
             steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
                     sh """
-                       make tests -C ${WORKSPACE}/solutions/coreclr
+                       make tests -C ${WORKSPACE}/solutions/coreclr | tee ${TEST_LOGS}/DOTNET_TESTS
                        """
                 }
             }
@@ -171,6 +172,15 @@ pipeline {
                     filesPath: "${LCOV_DIR}.tar.gz",
                     storageCredentialId: 'mystikosreleaseblobcontainer'
                 )
+            }
+        }
+        stage('Evaluate failed tests') {
+            steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    sh """
+                       ${JENKINS_SCRIPTS}/global/evaluate-failures.sh
+                       """
+                }
             }
         }
         stage('Cleanup') {
