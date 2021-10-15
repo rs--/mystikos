@@ -24,7 +24,7 @@ pipeline {
         )
         MYST_NIGHTLY_TEST = 1
         MYST_ENABLE_GCOV = 1
-        TEST_LOGs=".test_logs"
+        TEST_LOGS=".test_logs"
         FAILED_TEST_THRESHOLD=5
     }
     stages {
@@ -76,7 +76,9 @@ pipeline {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
                     sh """
-                       ${JENKINS_SCRIPTS}/global/make-tests.sh | tee ${TEST_LOGS}/MAKE_TESTS
+                       mkdir -p ${TEST_LOGS}
+                       ls -la
+                       ${JENKINS_SCRIPTS}/global/make-tests.sh
                        """
                 }
             }
@@ -105,7 +107,7 @@ pipeline {
                                      string(credentialsId: 'mystikos-maa-url-useast', variable: 'MAA_URL'),
                                      string(credentialsId: 'mystikos-managed-identity-objectid', variable: 'DB_USERID')]) {
                         sh """
-                           make tests -C ${WORKSPACE}/solutions | tee ${TEST_LOGS}/SQL_TESTS
+                           make tests -C ${WORKSPACE}/solutions >> ${TEST_LOGS}/SQL_TESTS
                            """
                     }
                 }
@@ -125,7 +127,7 @@ pipeline {
                            ${JENKINS_SCRIPTS}/global/run-azure-tests.sh \
                              ${WORKSPACE}/tests/azure-sdk-for-cpp  \
                              ${WORKSPACE}/solutions/dotnet_azure_sdk \
-                             | tee ${TEST_LOGS}/SDK_TESTS
+                             >> ${TEST_LOGS}/SDK_TESTS
                            """
                     }
                 }
@@ -135,7 +137,7 @@ pipeline {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'SUCCESS') {
                     sh """
-                       make tests -C ${WORKSPACE}/solutions/coreclr | tee ${TEST_LOGS}/DOTNET_TESTS
+                       make tests -C ${WORKSPACE}/solutions/coreclr >> ${TEST_LOGS}/DOTNET_TESTS
                        """
                 }
             }

@@ -1,5 +1,8 @@
+#!/bin/bash
+
 THRESHOLD=$FAILED_TEST_THRESHOLD
-if [ -z $THRESHOLD ] || [ ! "$THRESHOLD" =~ ^[0-9]+$ ] ; then
+regex='^[0-9]+$'
+if [[ -z "$THRESHOLD" ]] || [[ ! "$THRESHOLD" =~ $regex ]] ; then
   THRESHOLD=0
 fi
 

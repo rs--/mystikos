@@ -1,2 +1,13 @@
-make -j tests ALLTESTS=1 VERBOSE=1 || echo "Tests failed - evaluating"
+#!/bin/bash
 
+for dir in tests/*/
+do
+  START=$SECONDS
+  make tests tests/$dir
+  CURR=$SECONDS
+  DUR=$(($CURR - $START))
+  echo "$dir: $DUR" >> tests.log
+done
+
+echo "===================== Test results =========================="
+cat tests.log
