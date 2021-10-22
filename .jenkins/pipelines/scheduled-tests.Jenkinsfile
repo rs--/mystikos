@@ -14,6 +14,7 @@ pipeline {
         string(name: "REPOSITORY", defaultValue: "deislabs")
         string(name: "BRANCH", defaultValue: "main", description: "Branch to build")
         choice(name: "TEST_CONFIG", choices:['Nightly', 'Code Coverage'], description: "Test configuration to execute")
+        choice(name: "PACKAGE_BINARIES", choices:['false', 'true'], description: "True - create Debian package and install; False - use built binaries without packaging")
     }
     environment {
         MYST_SCRIPTS =    "${WORKSPACE}/scripts"
@@ -57,6 +58,16 @@ pipeline {
                 sh """
                    ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
                    ${JENKINS_SCRIPTS}/code-coverage/init-install.sh
+                   """
+            }
+        }
+        stage('Build and install Mystikos Package') {
+            when {
+                expression { params.PACKAGE_BINARIES == 'true' }
+            }
+            steps {
+                sh """
+                   ${JENKINS_SCRIPTS}/global/package-install.sh
                    """
             }
         }
