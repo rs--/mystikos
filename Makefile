@@ -9,7 +9,9 @@ TARBALL=$(PKGNAME).tar.gz
 DEBIAN_PACKAGE=$(PKGNAME).deb
 
 all:
+ifndef MYST_IGNORE_PREREQS
 	$(MAKE) .git/hooks/pre-commit
+endif
 	$(MAKE) init
 	$(MAKE) dirs
 
@@ -105,7 +107,7 @@ build:
 ##==============================================================================
 
 release-build:
-	make world MYST_IGNORE_PREREQS=1
+	make build
 	make bindist
 
 ##==============================================================================
