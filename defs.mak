@@ -19,9 +19,7 @@ ifndef SUBLIBDIR
 SUBLIBDIR=$(LIBDIR)/$(SUBDIR)
 endif
 
-ifndef BINDIR
 BINDIR=$(BUILDDIR)/bin
-endif
 ifndef SUBBINDIR
 SUBBINDIR=$(BINDIR)/$(SUBDIR)
 endif
@@ -225,7 +223,12 @@ EXEC = exec-$(TARGET)
 ##
 ##==============================================================================
 
+GDB_BIN = $(which myst-gdb)
+ifdef GDB_BIN
+GDB_COMMAND = $(GDB_BIN) --args
+else
 GDB_COMMAND = $(BINDIR)/myst-gdb --args
+endif
 
 ifdef GDB
 __GDB_COMMAND = $(GDB_COMMAND)
@@ -238,7 +241,12 @@ endif
 ##
 ##==============================================================================
 
+LLDDB_BIN = $(which myst-lldb)
+ifdef LLDDB_BIN
+LLDDB_COMMAND = $(LLDDB_BIN) --
+else
 LLDDB_COMMAND = $(BINDIR)/myst-lldb --
+endif
 
 ifdef LLDB
 __LLDB_COMMAND = $(LLDB_COMMAND)
@@ -346,11 +354,23 @@ endif
 ##
 ##==============================================================================
 
+MYST_BIN = $(which myst)
+
 MYST_EXEC += $(PREFIX)
+
+ifdef MYST_BIN
+MYST_EXEC += $(MYST_BIN)
+else
 MYST_EXEC += $(BINDIR)/myst
+endif
+
 MYST_EXEC += $(EXEC)
 
+ifdef MYST_BIN
+MYST = MYST_BIN
+else
 MYST = $(BINDIR)/myst
+endif
 
 ##==============================================================================
 ##
