@@ -55,7 +55,7 @@ pipeline {
                 )
                 sh """
                    tar -xzf ${BUILD_RESOURCES}
-                   cd ${WORKSPACE}/third_party/openenclave && make distclean && make all
+                   cd ${WORKSPACE}/third_party && make distclean && make
                    """
             }
         }

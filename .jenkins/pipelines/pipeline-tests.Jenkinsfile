@@ -66,7 +66,7 @@ pipeline {
             }
             steps {
                 sh """
-                   ${JENKINS_SCRIPTS}/global/build-repo-source.sh
+                   ${JENKINS_SCRIPTS}/global/make-world.sh
                    tar -zcf ${BUILD_RESOURCES} build
                    """
             }
@@ -92,24 +92,40 @@ pipeline {
             parallel {
                 stage("Run Unit Tests") {
                     steps {
-                        build job: "Helper-Pipelines/Unit-Test-Pipeline",
-                        parameters: [
-                            string(name: "REPOSITORY", value: REPOSITORY),
-                            string(name: "BRANCH", value: BRANCH),
-                            string(name: "TEST_CONFIG", value: TEST_CONFIG),
-                            string(name: "BUILD_RESOURCES", value: BUILD_RESOURCES)
-                        ]
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            sh """
+                               ${JENKINS_SCRIPTS}/global/make-tests.sh
+                               """
+                        }
                     }
                 }
                 stage("Run SQL Tests") {
                     steps {
-                        build job: "Helper-Pipelines/SQL-Test-Pipeline",
-                        parameters: [
-                            string(name: "REPOSITORY", value: REPOSITORY),
-                            string(name: "BRANCH", value: BRANCH),
-                            string(name: "REGION", value: REGION),
-                            string(name: "BUILD_RESOURCES", value: BUILD_RESOURCES)
-                        ]
+                        withCredentials([string(credentialsId: 'Jenkins-ServicePrincipal-ID', variable: 'SERVICE_PRINCIPAL_ID'),
+                                         string(credentialsId: 'Jenkins-ServicePrincipal-Password', variable: 'SERVICE_PRINCIPAL_PASSWORD'),
+                                         string(credentialsId: 'ACC-Prod-Tenant-ID', variable: 'TENANT_ID'),
+                                         string(credentialsId: 'ACC-Prod-Subscription-ID', variable: 'AZURE_SUBSCRIPTION_ID'),
+                                         string(credentialsId: 'oe-jenkins-dev-rg', variable: 'JENKINS_RESOURCE_GROUP'),
+                                         string(credentialsId: 'mystikos-managed-identity', variable: "MYSTIKOS_MANAGED_ID"),
+                                         string(credentialsId: "mystikos-sql-db-name-${REGION}", variable: 'DB_NAME'),
+                                         string(credentialsId: "mystikos-sql-db-server-name-${REGION}", variable: 'DB_SERVER_NAME'),
+                                         string(credentialsId: "mystikos-maa-url-${REGION}", variable: 'MAA_URL'),
+                                         string(credentialsId: 'mystikos-managed-identity-objectid', variable: 'DB_USERID'),
+                                         string(credentialsId: 'mystikos-mhsm-client-secret', variable: 'CLIENT_SECRET'),
+                                         string(credentialsId: 'mystikos-mhsm-client-id', variable: 'CLIENT_ID'),
+                                         string(credentialsId: 'mystikos-mhsm-app-id', variable: 'APP_ID'),
+                                         string(credentialsId: 'mystikos-mhsm-aad-url', variable: 'MHSM_AAD_URL'),
+                                         string(credentialsId: 'mystikos-mhsm-ssr-pkey', variable: 'SSR_PKEY')
+                        ]) {
+                            sh """
+                               ${JENKINS_SCRIPTS}/solutions/init-config.sh
+                               ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
+                               ${JENKINS_SCRIPTS}/solutions/azure-config.sh
+
+                               echo "Running in ${REGION}"
+                               make tests -C ${WORKSPACE}/solutions
+                               """
+                        }
                     }
                 }
                 stage("Run DotNet Tests") {
@@ -132,6 +148,32 @@ pipeline {
                         ]
                     }
                 }
+            }
+        }
+        stage('Measure and Report Code Coverage') {
+            when {
+                expression { params.TEST_CONFIG == 'Code Coverage' }
+            }
+            steps {
+                script {
+                    LCOV_DIR="mystikos-cc-${env.GIT_COMMIT}"
+                }
+
+                sh """
+                   ${MYST_SCRIPTS}/myst_cc
+
+                   mkdir ${LCOV_DIR}
+                   mv lcov* ${LCOV_DIR}
+                   tar -zcvf ${LCOV_DIR}.tar.gz ${LCOV_DIR}
+                   """
+
+                azureUpload(
+                    containerName: 'mystikos-code-coverage',
+                    storageType: 'container',
+                    uploadZips: true,
+                    filesPath: "${LCOV_DIR}.tar.gz",
+                    storageCredentialId: 'mystikosreleaseblobcontainer'
+                )
             }
         }
         stage('Cleanup') {
