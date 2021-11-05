@@ -8,7 +8,7 @@ pipeline {
     parameters {
         string(name: "REPOSITORY", defaultValue: "deislabs")
         string(name: "BRANCH", defaultValue: "main", description: "Branch to build")
-        choice(name: "REGION", choices:['useast', 'canadacentral'], description: "Azure region for solution tests")
+        choice(name: "REGION", choices:['useast', 'canadacentral'], description: "Azure region for the SQL solution tests")
         choice(name: "TEST_CONFIG", choices:['None','Nightly', 'Code Coverage'], description: "Test configuration to execute")
         string(name: "COMMIT_SYNC", description: "optional - used to sync outputs of parallel jobs")
     }

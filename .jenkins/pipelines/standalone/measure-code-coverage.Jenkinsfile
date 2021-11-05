@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'Jenkins-Shared-DC2'
+        label 'ACC-1804-DC2'
     }
     options {
         timeout(time: 30, unit: 'MINUTES')
