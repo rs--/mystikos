@@ -19,6 +19,7 @@ pipeline {
         MYST_ENABLE_GCOV =  "${TEST_CONFIG == 'Code Coverage' ? 1 : ''}"
         TEST_TYPE =         "solutions"
         LCOV_INFO =         "lcov-${GIT_COMMIT[0..7]}-${TEST_TYPE}.info"
+        LCOV_RESOURCES =    "lcov-${GIT_COMMIT[0..7]}-${TEST_TYPE}.tar.gz"
         BUILD_USER = sh(
             returnStdout: true,
             script: 'echo \${USER}'
@@ -113,17 +114,18 @@ pipeline {
                    ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
                    ${JENKINS_SCRIPTS}/code-coverage/init-install.sh
 
-                   ${MYST_SCRIPTS}/myst_cc_info
+                   ${MYST_SCRIPTS}/myst_cc
                    sed -i 's|SF:${WORKSPACE}|SF:|g' lcov.info
 
-                   mv lcov.info ${LCOV_INFO}
+                   mv lcov.info lcov/${LCOV_INFO}
+                   tar czf ${LCOV_RESOURCES} lcov
                    """
 
                 azureUpload(
                     containerName: 'mystikos-code-coverage',
                     storageType: 'container',
                     uploadZips: true,
-                    filesPath: "${LCOV_INFO}",
+                    filesPath: "${LCOV_RESOURCES}",
                     storageCredentialId: 'mystikosreleaseblobcontainer'
                 )
             }
