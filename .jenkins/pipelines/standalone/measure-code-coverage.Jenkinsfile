@@ -16,6 +16,7 @@ pipeline {
         MYST_NIGHTLY_TEST = 1
         MYST_ENABLE_GCOV =  1
         LCOV_PREFIX =       "lcov-${COMMIT_ID}"
+        BUILD_PREFIX =      "build-${COMMIT_ID}"
         BUILD_USER = sh(
             returnStdout: true,
             script: 'echo \${USER}'
@@ -35,6 +36,13 @@ pipeline {
                     storageCredentialId: 'mystikosreleaseblobcontainer'
                 )
 
+                azureDownload(
+                    downloadType: 'container',
+                    containerName: 'mystikos-build-resources',
+                    includeFilesPattern: "${BUILD_PREFIX}-*",
+                    storageCredentialId: 'mystikosreleaseblobcontainer'
+                )
+
                 sh """
                    ls -l
 
@@ -48,7 +56,9 @@ pipeline {
                    ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
                    ${JENKINS_SCRIPTS}/code-coverage/init-install.sh
 
-                   lcov -a ${LCOV_PREFIX}-dotnet.info -a ${LCOV_PREFIX}-sdk.info -a ${LCOV_PREFIX}-solutions.info -a ${LCOV_PREFIX}-unit.info -o lcov.info
+                   for archive in ${BUILD_PREFIX}-*; do tar xzf \$archive; done
+
+                   ${MYST_SCRIPTS}/myst_cc_info
                    lcov --list lcov.info | tee -a code-coverage-report
 
                    ${MYST_SCRIPTS}/myst_cc_report
@@ -60,13 +70,6 @@ pipeline {
                    cp ${LCOV_DIR}/lcov.info ${LCOV_PREFIX}.info
                    """
 
-                azureUpload(
-                    containerName: 'mystikos-code-coverage',
-                    storageType: 'container',
-                    uploadZips: true,
-                    filesPath: "${LCOV_DIR}.tar.gz",
-                    storageCredentialId: 'mystikosreleaseblobcontainer'
-                )
                 azureUpload(
                     containerName: 'mystikos-code-coverage',
                     storageType: 'container',
