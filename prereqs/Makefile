@@ -20,9 +20,9 @@ wait_dpkg:
 
 package_repo:
 	echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu $(OS_NAME) main" | sudo tee /etc/apt/sources.list.d/intel-sgx.list
-	wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
+	curl -fsSL https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
 	echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/$(OS_VERSION)/prod $(OS_NAME) main" | sudo tee /etc/apt/sources.list.d/msprod.list
-	wget -qO - https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+	curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
 	sudo apt update
 
 packages: package_repo
