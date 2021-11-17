@@ -66,14 +66,32 @@ pipeline {
                 sh """
                    ${JENKINS_SCRIPTS}/global/make-world.sh
                    """
+                stash includes: 'build/**/*', name: "build-${GIT_COMMIT}"
             }
         }
         stage("Run Unit Tests") {
-            steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    sh """
-                       ${JENKINS_SCRIPTS}/global/make-tests.sh
-                       """
+            parallel {
+                stage("Run Unit Tests 1") {
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            sh """
+                               make -j tests ALLTESTS=1 VERBOSE=1 MYST_SKIP_LTP_TESTS=1 MYST_SKIP_TESTS_1=1
+                               """
+                        }
+                    }
+                }
+                stage("Run Unit Tests 2") {
+                    agent {
+                        label UBUNTU_VERSION == '20.04' ? 'ACC-2004-DC4' : 'ACC-1804-DC4'
+                    }
+                    steps {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            unstash "build-${GIT_COMMIT}"
+                            sh """
+                               make -j tests ALLTESTS=1 VERBOSE=1 MYST_SKIP_LTP_TESTS=1 MYST_SKIP_TESTS_2=1
+                               """
+                        }
+                    }
                 }
             }
         }

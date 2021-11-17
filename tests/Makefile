@@ -3,6 +3,7 @@ include $(TOP)/defs.mak
 
 DIRS =
 
+ifndef MYST_SKIP_TESTS_1
 DIRS += fork
 DIRS += vfork
 DIRS += myst
@@ -57,6 +58,10 @@ DIRS += futex
 DIRS += round
 DIRS += signal
 
+#Tests phase 1
+endif
+
+ifndef MYST_SKIP_TESTS_2
 ifneq ($(TARGET),linux)
 DIRS += tlscert
 DIRS += tlscert2
@@ -135,6 +140,9 @@ DIRS += aspnetcore
 endif
 
 DIRS += appenv
+
+#Tests phase 2
+endif
 
 .PHONY: $(DIRS)
 
