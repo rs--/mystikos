@@ -81,12 +81,8 @@ pipeline {
                     }
                 }
                 stage("Run Unit Tests 2") {
-                    agent {
-                        label UBUNTU_VERSION == '20.04' ? 'ACC-2004-DC4' : 'ACC-1804-DC4'
-                    }
                     steps {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                            unstash "build-${GIT_COMMIT}"
                             sh """
                                make -j tests ALLTESTS=1 VERBOSE=1 MYST_SKIP_LTP_TESTS=1 MYST_SKIP_TESTS_2=1
                                """
