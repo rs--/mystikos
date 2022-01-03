@@ -3,7 +3,7 @@ pipeline {
         label UBUNTU_VERSION == '20.04' ? 'ACC-2004-DC4' : 'ACC-1804-DC4'
     }
     options {
-        timeout(time: 300, unit: 'MINUTES')
+        timeout(time: 420, unit: 'MINUTES')
     }
     parameters {
         choice(name: "UBUNTU_VERSION", choices: ["18.04", "20.04"])
