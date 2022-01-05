@@ -58,38 +58,34 @@ pipeline {
                 axes {
                     axis {
                         name 'OS_VERSION'
-                        values '18.04', '20.04'
+                        values '18.04'
                     }
                     axis {
                         name 'TEST_PIPELINE'
-                        values 'Unit', 'Solutions', 'DotNet', 'DotNet-P1', 'Azure-SDK', 'PyTorch', 'OpenMP-Testsuite'
+                        values 'Unit', 'Azure-SDK'
                     }
                 }
                 stages {
                     stage("Matrix") {
+                        when {
+                            expression { return (TEST_PIPELINE == 'DotNet-P1' && ! params.RUN_DOTNETP1) || (TEST_PIPELINE == 'OpenMP-Testsuite' && ! params.RUN_OPENMP_TESTSUITE) || (TEST_PIPELINE != 'DotNet-P1' || TEST_PIPELIN != 'OpenMP-Testsuite') }
+                        }
                         steps {
-                            script {
-                                // Workaround for skipping .NET P1 tests as dynamic matrix axis values are not supported
-                                // https://issues.jenkins.io/browse/JENKINS-62127
-                                if ( ! ( (TEST_PIPELINE == 'DotNet-P1' && ! params.RUN_DOTNETP1)
-                                      || (TEST_PIPELINE == 'OpenMP-Testsuite' && ! params.RUN_OPENMP_TESTSUITE) )) {
-                                    stage("${OS_VERSION} ${TEST_PIPELINE} (${TEST_CONFIG})") {
-                                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                                            build(
-                                                job: "/Mystikos/Standalone-Pipelines/${TEST_PIPELINE}-Tests-Pipeline",
-                                                parameters: [
-                                                    string(name: "UBUNTU_VERSION", value: OS_VERSION),
-                                                    string(name: "REPOSITORY", value: params.REPOSITORY),
-                                                    string(name: "BRANCH", value: params.BRANCH),
-                                                    string(name: "PULL_REQUEST_ID", value: params.PULL_REQUEST_ID),
-                                                    string(name: "TEST_CONFIG", value: env.TEST_CONFIG),
-                                                    string(name: "REGION", value: params.REGION),
-                                                    string(name: "COMMIT_SYNC", value: GIT_COMMIT_ID)
-                                                ]
-                                            )
-                                        }
-                                    }
-                                }
+                            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                                build(
+                                    job: "/Mystikos/Standalone-Pipelines/${TEST_PIPELINE}-Tests-Pipeline",
+                                    parameters: [
+                                        string(name: "UBUNTU_VERSION", value: OS_VERSION),
+                                        string(name: "REPOSITORY", value: params.REPOSITORY),
+                                        string(name: "BRANCH", value: params.BRANCH),
+                                        string(name: "PULL_REQUEST_ID", value: params.PULL_REQUEST_ID),
+                                        string(name: "TEST_CONFIG", value: env.TEST_CONFIG),
+                                        string(name: "REGION", value: params.REGION),
+                                        string(name: "COMMIT_SYNC", value: GIT_COMMIT_ID)
+                                    ]
+                                )
+                                println currentBuild.getRawBuild().getLog()
+                                script{ "echo ${TEST_PIPELINE}"
                             }
                         }
                     }
