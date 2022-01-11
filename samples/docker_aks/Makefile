@@ -18,6 +18,7 @@ $(APPDIR): hello.c
 	@gcc $(CFLAGS) -o $(APPDIR)/bin/hello hello.c
 
 container:
+	@docker pull mystikos.azurecr.io/mystikos-bionic:latest
 	@docker build --build-arg PSW_VERSION=$(PSW_VERSION) --build-arg MYST_RELEASE_VERSION=$(MYST_RELEASE_VERSION) -t $(DOCKER_IMG) .
 
 run: build
