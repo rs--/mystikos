@@ -260,3 +260,46 @@ char* myst_gcov_strcat(char* dest, const char* src)
 
     return dest_copy;
 }
+
+
+int myst_gcov__gcov_open(const char *name, int mode)
+{
+    return myst_gcov_open(name, mode);
+}
+
+int myst_gcov__gcov_close(int fd)
+{
+    return myst_gcov_close(fd);
+}
+
+_Noreturn void myst_gcov__gcov_exit(int status)
+{
+    myst_gcov_exit(status);
+}
+
+static FILE* myst_gcov___gcov_error_file(void)
+{
+    return stderr;
+}
+
+gcov_type myst_gcov_read_counter(void)
+{
+  gcov_type value;
+  const gcov_unsigned_t *buffer = gcov_read_words (2);
+
+  if (!buffer)
+    return 0;
+  value = from_file (buffer[0]);
+  if (sizeof (value) > sizeof (gcov_unsigned_t))
+    value |= ((gcov_type) from_file (buffer[1])) << 32;
+  else if (buffer[1])
+    gcov_var.error = -1;
+
+  return value;
+}
+
+_Noreturn void myst_gcov__gcov_read_summary(struct gcov_summary *summary)
+{
+    summary->runs = myst_gcov___gcov_read_unsigned();
+    summary->sum_max = myst_gcov___gcov_read_unsigned()
+}

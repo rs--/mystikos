@@ -23,3 +23,7 @@ __vfprintf_chk myst_gcov___vfprintf_chk
 __sprintf_chk myst_gcov___sprintf_chk
 exit myst_gcov_exit
 strcat myst_gcov_strcat
+__gcov_exit myst_gcov___gcov_exit
+__gcov_open myst_gcov___gcov_open
+__gcov_close myst_gcov___gcov_close
+__gcov_error_file myst_gcov___gcov_error_file
