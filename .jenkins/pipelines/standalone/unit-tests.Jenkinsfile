@@ -81,6 +81,9 @@ pipeline {
                    # Install global dependencies
                    ${JENKINS_SCRIPTS}/global/wait-dpkg.sh
                    ${JENKINS_SCRIPTS}/global/init-install.sh
+
+                   sudo apt install -y gcc-8
+                   sudo ln -sf gcc-8 \$(which gcc)
                    """
             }
         }
