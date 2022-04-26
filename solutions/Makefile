@@ -4,6 +4,7 @@ include $(TOP)/defs.mak
 DIRS =
 DIRS += attested_tls
 
+ifdef MYST_NIGHTLY_TEST
 ifdef DB_SERVER_NAME
 ifdef DB_NAME
 ifdef MAA_URL
@@ -15,7 +16,6 @@ endif
 
 # Enable this azure-specific solution only on the nightly pipeline
 # as it depends on secrets only availale on that pipeline.
-ifdef MYST_NIGHTLY_TEST
 DIRS += mhsm_ssr
 DIRS += confidential_ml
 endif
@@ -28,7 +28,6 @@ endif
 
 DIRS += aspnet
 DIRS += memcached
-DIRS += python_flask_tests
 DIRS += python_web_frameworks
 DIRS += python_webserver
 ifndef MYST_SKIP_PR_TEST
